@@ -6,11 +6,10 @@ on:
   pull_request:
     branches: [ master ]
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,3 +28,6 @@ jobs:
   
       - name: Install package
         run: poetry install
+
+      - name: Test with pytest
+        run: poetry run pytest tests/
