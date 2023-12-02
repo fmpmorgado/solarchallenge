@@ -1,8 +1,7 @@
 import numpy as np
-import pytest
-from src.trajectory.orbit import Orbit
-from src.trajectory.orbit import coe2rv, rv2coe
-from src.bodies.bodies import Earth
+from solarchallenge.trajectory.orbit import Orbit
+from solarchallenge.trajectory.orbit import coe2rv, rv2coe
+from solarchallenge.bodies.bodies import Earth
 
 def test_convert_coe_to_rv():
 

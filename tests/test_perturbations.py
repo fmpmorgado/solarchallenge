@@ -1,18 +1,9 @@
 import numpy as np
-import pytest
-from src.trajectory.orbit import Orbit, rv2coe
-from src.bodies.bodies import Earth, EARTH
-from src.propagator.propagator import propagate_cowell
-from src.propagator.perturbations import J2_perturbation_wrapper, J3_perturbation_wrapper
+from solarchallenge.trajectory.orbit import Orbit, rv2coe
+from solarchallenge.bodies.bodies import Earth, EARTH
+from solarchallenge.propagator.propagator import propagate_cowell
+from solarchallenge.propagator.perturbations import J2_perturbation_wrapper, J3_perturbation_wrapper
 from datetime import datetime, timedelta
-
-from poliastro.twobody import Orbit as poliOrbit
-from poliastro.core.elements import rv2coe as polirv2coe
-from poliastro.core.perturbations import J2_perturbation as poliJ2
-from poliastro.bodies import Earth as poliEarth
-from astropy import units as u
-from poliastro.core.propagation import func_twobody
-import poliastro
 
 # Perturbation tests are based on the tests conducted with poliastro
 # https://github.com/poliastro/poliastro/blob/main/tests/tests_twobody/test_perturbations.py
@@ -30,7 +21,7 @@ def test_J2_propagation_Earth():
     J2 = 0.00108263
     R = 6378.1366
 
-    r, v = propagate_cowell(orbit=orbit, tofs=tf, perturbations=[J2_perturbation_wrapper(J2, R)])
+    r, v = propagate_cowell(orbit=orbit, tf=tf, perturbations=[J2_perturbation_wrapper(J2, R)])
     __, __, __, raan, argp, __ = rv2coe(r=r, v=v, mu=Earth.mu)
 
     raan_variation_rate = (raan - raan0) / tf * 3600 # [deg/h]
@@ -62,8 +53,8 @@ def test_J3_propagation_Earth():
     R = 6378.1366
 
     t_list = np.linspace(0, tf, 1000)
-    r_J2, v_J2 = propagate_cowell(orbit=orbit, tofs=tf, t_eval=t_list, perturbations=[J2_perturbation_wrapper(J2, R)])
-    r_J3, v_J3 = propagate_cowell(orbit=orbit, tofs=tf, t_eval=t_list, perturbations=[J2_perturbation_wrapper(J2, R), J3_perturbation_wrapper(J3, R)])
+    r_J2, v_J2 = propagate_cowell(orbit=orbit, tf=tf, t_eval=t_list, perturbations=[J2_perturbation_wrapper(J2, R)])
+    r_J3, v_J3 = propagate_cowell(orbit=orbit, tf=tf, t_eval=t_list, perturbations=[J2_perturbation_wrapper(J2, R), J3_perturbation_wrapper(J3, R)])
 
     assert np.isclose(r_J2[0,-1], r_J2_expected[0], rtol = 1E-2)
     assert np.isclose(r_J2[1,-1], r_J2_expected[1], rtol = 1E-3)

@@ -1,6 +1,6 @@
 import numpy as np
 import datetime
-from src.bodies.bodies import Body
+from solarchallenge.bodies.bodies import Body
 
 class Orbit:
     """Class to store the position and velocity of a body at a
@@ -29,7 +29,7 @@ class Orbit:
         self.v = v
         self.epoch = epoch
         self.attractor = attractor
-
+        
     @classmethod
     def from_vector(cls, r: list[float], v: list[float], epoch: datetime.datetime, attractor: Body):
         """Return Orbit from position and velocity vectors.

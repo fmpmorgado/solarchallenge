@@ -91,7 +91,7 @@ print(time()-a)
 
 print(c)
 
-from src.solarpanel.module import SolarModule
+from src.solarchallenge.solarpanel.module import SolarModule
 m = SolarModule.from_database("Zytech Solar ZT320P")
 
 parameters = {'celltype': 'multiSi', # technology
@@ -111,7 +111,7 @@ parameters = {'celltype': 'multiSi', # technology
 n = SolarModule(parameters)
 print(m.parameters)
 
-from src.solarpanel.power import compute_diode_parameters, compute_IV_PindadoCubas
+from src.solarchallenge.solarpanel.power import compute_diode_parameters, compute_IV_PindadoCubas
 
 
 diode_params = pvlib.pvsystem.calcparams_desoto(irrad, temp_cell, module_data['alpha_sc'], cec_fit_params[4], 
@@ -122,7 +122,7 @@ p = compute_diode_parameters(irrad, temp_cell, module_data['alpha_sc'], cec_fit_
                                             cec_fit_params[2])
 
 
-from src.solarpanel.solarpanel import SolarPanel, SolarPanel2
+from src.solarchallenge.solarpanel.solarpanel import SolarPanel, SolarPanel2
 
 
 from datetime import date

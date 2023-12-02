@@ -1,6 +1,6 @@
 import numpy as np
 from datetime import datetime
-from src.propagator.propagator import propagate_cowell
+from solarchallenge.propagator.propagator import propagate_cowell
 
 class OrbitData:
     def __init__(self):

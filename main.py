@@ -1,11 +1,10 @@
-
-from src.trajectory.orbit import Orbit, coe2rv
-from src.bodies.bodies import Earth, Sun, EARTH
-from src.trajectory.kepler import newton_raphson, compute_kepler
+from src.solarchallenge.trajectory.orbit import Orbit, coe2rv
+from src.solarchallenge.bodies.bodies import Earth, Sun, EARTH
+from src.solarchallenge.trajectory.kepler import newton_raphson, compute_kepler
 import numpy as np
 from datetime import datetime
-from src.propagator.propagator import propagate_cowell, dsat_dt
-from src.propagator.perturbations import constant_accel_wrapper
+from src.solarchallenge.propagator.propagator import propagate_cowell, dsat_dt
+from src.solarchallenge.propagator.perturbations import constant_accel_wrapper
 
 J2000 = datetime(2000, 1, 1, 11, 58, 55, 816) #J2000 in UTC format
 AU = 149_597_870.7 #Astronomical Unit in km
@@ -64,7 +63,7 @@ print(a)
 """
 
 from datetime import timedelta
-from src.model import Model
+from src.solarchallenge.model import Model
 
 earth_orbit = Orbit.from_coe(a=1.00000011*AU, ecc=0.01671022, inc = 0.00005, raan = -11.26064, argp=102.94719, nu = 356.907,
                              epoch=J2000, attractor=Sun)

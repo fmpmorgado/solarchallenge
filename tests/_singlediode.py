@@ -5,7 +5,7 @@ testing single-diode methods with PVlib library
 import pytest
 import pvlib
 import numpy as np
-from src.solarpanel.power import 
+from src.solarchallenge.solarpanel.power import 
 
 RADIANCE = 888
 TCELL = 55

@@ -1,19 +1,16 @@
 [build-system]
-requires = ["setuptools>=43.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
-[project]
-name = "OC-solar"
+[tool.poetry]
+name = "solarchallenge"
 version = "0.0.1"
-requires-python = ">=3.10"
 
-authors = [
-    {name = "Fabio Morgado"}
-]
+authors = ["Fabio Morgado"]
 
 description = "Open Cosmos solar panel challenge."
 
-readme = "README.md"
+#readme = "README.md"
 
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
@@ -22,10 +19,15 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 
-dependencies = [
-  "numpy"
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.26.2"
+scipy = "^1.11.4"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
 ]
-
-[project.optional-dependencies]
-test = ["pytest"]
-
