@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=43.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OC-solar"
+version = "0.0.1"
+requires-python = ">=3.10"
+
+authors = [
+    {name = "Fabio Morgado"}
+]
+
+description = "Open Cosmos solar panel challenge."
+
+readme = "README.md"
+
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+  "numpy"
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+

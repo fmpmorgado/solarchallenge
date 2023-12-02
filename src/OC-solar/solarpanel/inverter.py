@@ -1,0 +1,2 @@
+class SolarInverter():
+    pass
