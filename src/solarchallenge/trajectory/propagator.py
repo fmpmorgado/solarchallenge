@@ -1,12 +1,120 @@
+"""
+    The trajectory.propagator modul contains functions to propagate
+    the orbit in time
+"""
 import numpy as np
-from datetime import datetime
+import numpy.typing as npt
+from scipy.integrate import solve_ivp
 from .orbit import coe2rv, rv2coe, Orbit
+from datetime import datetime
+
+def propagate_cowell(orbit: Orbit, tf: float=86400.0, rtol: float=1E-11,
+                     atol: float=1E-12, method: str = 'DOP853',
+                     t_eval: None | npt.ArrayLike=None, perturbations: None | list=None
+                     ) -> tuple[npt.ArrayLike, npt.ArrayLike]:
+    """Propagates orbit using Cowell's formulation
+    using scipy.solve_ivp module
+
+    Parameters
+    ----------
+    orbit : Orbit
+        orbit object to propagate
+    tf : float
+        Time of propagation [sec]
+    rtol : float
+        Relative tolerance for scipy.solve_ivp
+    atol : float
+        Absolute tolerance for scipy.solve_ivp
+    method : str
+        Name of the time propagator method to be used
+        by scipy.solve_ivp: (ex: DOP853, RK43, ...)
+    t_eval : np.array[float]
+        Array of time epochs to store the solution. If t_eval
+        set to None, the function returns the last stored solution
+    perturbations : list[function]
+        List of orbit perturbation functions to be applied
+
+    Returns
+    -------
+    r : np.array[float]
+        List of position vectors [km]
+    v : np.array[float]
+        List of Velocity vectors [km/s]
+    """
+
+    # Define function f to account for the perturbations
+    def f(t0, state, k):
+        du_kep = dsat_dt(t0, state, k)
+        du_pert = np.zeros(du_kep.shape)
+        
+        if perturbations != None:
+            for pert in perturbations:
+                du_pert += pert(t0, state, k)
+        
+        return du_kep + du_pert
+
+    r = orbit.r
+    v = orbit.v
+
+    # Initial state to solve the IVP
+    u0 = np.array([r[0], r[1], r[2], v[0], v[1], v[2]])
+
+    mu = orbit.attractor.mu
+
+    result = solve_ivp(
+        f,
+        (0, tf),
+        u0,
+        args=(mu,),
+        t_eval=t_eval,
+        rtol=rtol,
+        atol=atol,
+        method=method,
+        dense_output=False,
+    )
+
+    if t_eval is None:
+        r = result.y[:3,-1]
+        v = result.y[3:,-1]
+    else:
+        r = result.y[:3,:]
+        v = result.y[3:,:]  
+    
+    return r, v
+
+
+#https://www.sciencedirect.com/science/article/pii/S1110016821000016
+def dsat_dt(t0: float, u: list[float], mu: float) -> npt.ArrayLike:
+    """Differential equation for the initial value two body problem.
+       Based on the approach used in poliastro library
+
+    Parameters
+    ----------
+    t0 : float
+        Time.
+    u : list[float]
+        Satellite state vector [x, y, z, vx, vy, vz] (km, km/s).
+    mu : float
+        Standard gravitational parameter.
+
+    Returns
+    -------
+    du: list[float]
+        Derivatives list to solve the IVP problem
+    """
+
+    x, y, z, vx, vy, vz = u
+    r3 = (x ** 2 + y ** 2 + z ** 2) ** 1.5
+
+    du = np.array([vx, vy, vz, -mu * x / r3, -mu * y / r3, -mu * z / r3])
+
+    return du
+
 
 #http://murison.alpheratz.net/dynamics/twobody/KeplerIterations_summary.pdf
 def compute_kepler(orbit: Orbit, epoch: datetime, time_perihelion: datetime,
                    tolerance: float=1e-6, max_iter: int=100, 
                    e_anom_i: float | None=None) -> tuple[float, float, float]:
-
     """Computes the position and velocity for a given epoch
        using Kepler equation.
 
@@ -61,6 +169,7 @@ def compute_kepler(orbit: Orbit, epoch: datetime, time_perihelion: datetime,
 
     return target_r, target_v, nu
 
+
 def newton_raphson(m_anom: float, ecc: float, tolerance: float=1e-12,
                    max_iter: float=100, e_anom_i: float | None=None) -> float:
     """Newton-Raphson solver to compute the eccentric anomaly
@@ -99,6 +208,6 @@ def newton_raphson(m_anom: float, ecc: float, tolerance: float=1e-12,
         n_iter += 1
 
     if n_iter == max_iter:
-        raise Exception("Newton Raphson fo the computation of eccentric anomaly did not converge.")
+        raise Exception("Newton Raphson for the computation of eccentric anomaly did not converge.")
 
     return e_anom

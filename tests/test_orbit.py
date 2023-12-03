@@ -2,10 +2,11 @@ import numpy as np
 from solarchallenge.trajectory.orbit import Orbit
 from solarchallenge.trajectory.orbit import coe2rv, rv2coe
 from solarchallenge.bodies.bodies import Earth
+from solarchallenge.constants import MU_EARTH
 
 def test_convert_coe_to_rv():
 
-    earth_mu = Earth.mu
+    earth_mu = MU_EARTH
     p = 11_067.790
     ecc = 0.83285
     inc = 87.87
@@ -31,7 +32,7 @@ def test_convert_coe_to_rv():
 
 def test_convert_rv_to_coe():
 
-    earth_mu = Earth.mu
+    earth_mu = MU_EARTH
     p_expected = 11_067.790
     ecc_expected = 0.83285
     inc_expected = 87.87

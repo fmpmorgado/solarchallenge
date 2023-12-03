@@ -1,75 +1,92 @@
 import numpy as np
+from solarchallenge.constants import BOLTZMANN
+#TODO Missing SolarPanel import (solve circular import)
 
-def compute_IV_PindadoCubas(G, T, solar_panel, method = 'constant', V = 0):
-    #https://oa.upm.es/67369/1/IEEETran_Aerospece_2021.pdf
-    #https://oa.upm.es/43747/1/PindadoRE20016.pdf
-    #https://core.ac.uk/download/pdf/211559749.pdf
-    #https://research-information.bris.ac.uk/ws/portalfiles/portal/216857427/SSC19_WP1_16_Tom_Etchells.pdf
 
-    if method != 'constant' and method != 'optimal':
-        raise NameError("Options for method: constant, optimal")
+def compute_IV_PindadoCubas(solar_irr: float, temperature: float, solar_panel,
+                            voltage: None|float=None) -> tuple[float, float]:
+    """
+    Method to compute the IV of a solar panel.
 
-    a = solar_panel.design_data['a']
-    N_s = solar_panel.design_data['N_s']
-    I_sc = solar_panel.design_data['I_sc']
-    V_oc = solar_panel.design_data['V_oc']
-    I_mp = solar_panel.design_data['I_mp']
-    V_mp = solar_panel.design_data['V_mp']
-    alpha_Isc = solar_panel.design_data['alpha_Isc']
-    alpha_Voc = solar_panel.design_data['alpha_Voc']
-    alpha_Imp = solar_panel.design_data['alpha_Imp']
-    alpha_Vmp= solar_panel.design_data['alpha_Vmp']
-    Gref = solar_panel.design_data['Gref']
-    Tref = solar_panel.design_data['Tref']
+    Method is an alternative to the single diode model. It uses the most common parameters
+    found in solar panel datasheets.
 
-    #Boltzmann constant in eV/K, 8.617332478e-05
-    k = 8.617332478e-05
-    VT = N_s * T * k
+    More information on the method can be found at:
+    - https://oa.upm.es/67369/1/IEEETran_Aerospece_2021.pdf
+    - https://oa.upm.es/43747/1/PindadoRE20016.pdf
 
-    #Account for Temperature:
-    I_sc = G / Gref * (I_sc + alpha_Isc * (T - Tref))
-    I_mp = G / Gref * (I_mp + alpha_Imp * (T - Tref))
-    V_oc = V_oc + a * VT * np.log(G / Gref) + alpha_Voc * (T - Tref)
-    V_mp = V_mp + a * VT * np.log(G / Gref) + alpha_Vmp * (T - Tref)
+    Parameters
+    ----------
+    solar_irr : float
+        Effective Solar irradiance [W/m**2] (inclination already accounted for)
+    temperature : float
+        Temperature of the solar panel [ºC or K]
+    solar_panel : SolarPanel
+        Object of class SolarPanel
+    voltage : float | None
+        Operating voltage. If None, the maximum power voltage is used
 
-    if method == 'optimal': 
-        V = V_mp
 
-    phi = I_sc / I_mp * (I_sc / (I_sc-I_mp)) * ((V_oc - V_mp) / V_oc)
+    Returns
+    -------
+    current : float
+        Current of the solar panel [A]
+    coltage : float
+        Voltage of the solar panel [V]
+    """
+
+    # Solar Panel characteristics
+    a = solar_panel.a
+    n_s = solar_panel.n_s
+    i_sc = solar_panel.i_sc
+    v_oc = solar_panel.v_oc
+    i_mp = solar_panel.i_mp
+    v_mp = solar_panel.v_mp
+    alpha_i_sc = solar_panel.alpha_i_sc
+    alpha_v_oc = solar_panel.alpha_v_oc
+    alpha_i_mp = solar_panel.alpha_i_mp
+    alpha_v_mp= solar_panel.alpha_v_mp
+    solar_irr_ref = solar_panel.solar_irr_ref
+    tref = solar_panel.tref
+
+    # Thermal voltage
+    v_t = n_s * temperature * BOLTZMANN
+
+    #Check for negative solar irradiances (due to incidence angle theta > 90 deg or theta < -90 deg)
+    try:
+        if solar_irr <= 0.001: solar_irr = 0.001    
+    except:
+        solar_irr[solar_irr <= 0.001] = 0.001
+
+    #Account for temperature and solar irradiance:
+    i_sc = solar_irr / solar_irr_ref * (i_sc + alpha_i_sc * (temperature - tref))
+    i_mp = solar_irr / solar_irr_ref * (i_mp + alpha_i_mp * (temperature - tref))
+    v_oc = v_oc + a * v_t * np.log(solar_irr / solar_irr_ref) + alpha_v_oc * (temperature - tref)
+    v_mp = v_mp + a * v_t * np.log(solar_irr / solar_irr_ref) + alpha_v_mp * (temperature - tref)
+
+    if voltage is None: 
+        voltage = v_mp
+
+    phi = i_sc / i_mp * (i_sc / (i_sc-i_mp)) * ((v_oc - v_mp) / v_oc)
     
-    if V <= V_mp:
-        I = I_sc * (1.0 - (1.0 - I_mp / I_sc) * (V / V_mp) ** (I_mp/(I_sc - I_mp)))
-    else:
-        I = I_mp * V_mp / V * (1 - ((V - V_mp) / (V_oc - V_mp)) ** phi)
+    #This check is to see if any np.array was used as an argument of a function,
+    #as the function allows to vectorize the computation of power for arrays of
+    #angle incidence and solar irradiance at constant temperature.
+    try:
+        if voltage <= v_mp:
+            current = i_sc * (1.0 - (1.0 - i_mp / i_sc) * (voltage / v_mp) ** (i_mp / (i_sc - i_mp)))
+        else:
+            current = i_mp * v_mp / voltage * (1 - ((voltage - v_mp) / (v_oc - v_mp)) ** phi)
+    except:
+        current = np.zeros(v_mp.shape)
 
-    return 0
+        if type(voltage) is int or type(voltage) is float:
+            voltage = np.ones(v_mp.shape) * voltage
 
-"""
-def compute_diode_parameters(eff_irradiance, temp_cell, alpha_sc, a_ref,
-                             I_L_ref, I_o_ref, R_sh_ref, R_s, EgRef=1.121,
-                             dEgdT=-0.0002677, irrad_ref = 1000.0, temp_ref = 25.0):
-    #https://pvpmc.sandia.gov/modeling-guide/2-dc-module-iv/single-diode-equivalent-circuit-models/de-soto-five-parameter-module-model/
-    #https://github.com/pvlib/pvlib-python/blob/main/pvlib/pvsystem.py#L1653
+        index = (voltage - v_mp <= 0)
+        current[index] = i_sc[index] * (1.0 - (1.0 - i_mp[index] / i_sc[index]) * (voltage[index] / v_mp[index]) ** (i_mp[index] /(i_sc[index] - i_mp[index])))
 
-    #No spectral effect
-    #De Soto model (De Soto et al. 2006)
+        index = (voltage - v_mp > 0)
+        current[index] = i_mp[index] * v_mp[index] / voltage[index] * (1 - ((voltage[index] - v_mp[index]) / (v_oc[index] - v_mp[index])) ** phi[index])
 
-    #TODO
-    #Boltzmann constant in eV/K, 8.617332478e-05
-    k = 8.617332478e-05
-    
-    temp_cell_K = temp_cell + 273.15
-    temp_ref_K = temp_ref + 273.15
-
-    E_g = EgRef * (1 + dEgdT*(temp_cell_K - temp_ref_K))
-
-    IL = eff_irradiance / irrad_ref * (I_L_ref + alpha_sc * (temp_cell_K - temp_ref_K))
-    I0 = (I_o_ref * (((temp_cell_K)/ temp_ref_K) ** 3) * (np.exp(EgRef / (k*(temp_ref_K)) - (E_g / (k*(temp_cell_K))))))
-
-    Rsh = R_sh_ref * (irrad_ref / eff_irradiance)
-    Rs = R_s
-
-    nNsVth = a_ref * (temp_cell_K / temp_ref_K)
-
-    return (IL, I0, Rs, Rsh, nNsVth)
-"""
+    return current, voltage

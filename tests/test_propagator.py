@@ -1,9 +1,8 @@
 import numpy as np
 import pytest
 from solarchallenge.trajectory.orbit import Orbit, rv2coe
-from solarchallenge.trajectory.kepler import compute_kepler
 from solarchallenge.bodies.bodies import Earth
-from solarchallenge.propagator.propagator import propagate_cowell
+from solarchallenge.trajectory.propagator import propagate_cowell, compute_kepler
 from datetime import datetime, timedelta
 
 @pytest.fixture
