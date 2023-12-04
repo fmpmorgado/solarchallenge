@@ -80,7 +80,7 @@ iss_orbit = Orbit.from_coe(a = 6771, ecc = 0.0, inc=60, raan=0, argp=0, nu = 180
 engine = Model()
 engine.set_orbit_body(earth_orbit)
 engine.set_orbit_solar_panel(iss_orbit)
-engine.propagate_orbit(start = J2000, end = J2000 + timedelta(0.2), perturbations=[constant_accel_wrapper(-0E-5)])
+engine.propagate_orbit(start = J2000 + timedelta(0.0), end = J2000 + timedelta(0.2) + timedelta(0.2), perturbations_panel=[constant_accel_wrapper(-0E-5)])
 
 ###################
 # Solar Panel stuff
@@ -103,22 +103,26 @@ solar_panel = {
     'eff': 1
 }
 
-panel = SolarPanel.from_dict(solar_panel)
-engine.set_solar_panel(panel)
-
 solar_add = {"area": 1,
              "mass": 1,
-             "cp": 1000,
+             "c": 1000,
              "emittance_back": 1.0,
              "emittance_front": 1.0,
              "absorptance_back": 1.0,
              "absorptance_front": 1.0,
 }
 
-engine.compute_power(thermal_model=True, a=solar_add)
+panel = SolarPanel.from_dict(solar_panel|solar_add)
+#panel.set_therm_parameters(**solar_add)
+
+engine.set_solar_panel(panel)
+engine.compute_power(thermal_model=True)
 
 TCELL = 20
 RADIANCE = 1300
+
+from solarchallenge.constants import S
+
 
 #print(panel.compute_angle_solar_incidence(r_earth=[300000000,0,0], r_panel=[30.0,0,0]))
 #print(panel.compute_power(T = 28, angle_incidence=75, V = 2))

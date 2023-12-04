@@ -31,7 +31,7 @@ def compute_IV_PindadoCubas(solar_irr: float, temperature: float, solar_panel,
     -------
     current : float
         Current of the solar panel [A]
-    coltage : float
+    voltage : float
         Voltage of the solar panel [V]
     """
 

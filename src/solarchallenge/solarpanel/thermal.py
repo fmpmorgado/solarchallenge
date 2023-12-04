@@ -39,7 +39,7 @@ def steady_state(q_in, panel: SolarPanel, solar_irr, theta, emittance_front, emi
     return temp
 
 
-def energy_solver(panel: SolarPanel, time, r_panel, r_planet, solar_irr, theta, heat_parameters, voltage = None):
+def energy_solver(panel: SolarPanel, time, r_panel, r_planet, solar_irr, theta, voltage = None):
 
     # Compute required parameters for heatflux computation
     # This parameters are not dependent on temperature
@@ -48,12 +48,12 @@ def energy_solver(panel: SolarPanel, time, r_panel, r_planet, solar_irr, theta, 
     ff = compute_form_factor(r_panel=r_panel)
     shadow = check_is_shadowed(r_planet=r_planet, r_panel=r_panel, eta=eta)
 
-    C = heat_parameters["mass"] * heat_parameters["cp"] # heat capacitance
-    area = heat_parameters["area"]
-    absorptance_front = heat_parameters["absorptance_front"]
-    emittance_front = heat_parameters["emittance_front"]
-    absorptance_back = heat_parameters["absorptance_back"]
-    emittance_back = heat_parameters["emittance_back"]
+    C = panel.mass * panel.c # heat capacitance
+    area = panel.area
+    absorptance_front = panel.absorptance_front
+    emittance_front = panel.emittance_front
+    absorptance_back = panel.absorptance_back
+    emittance_back = panel.absorptance_front
 
     # Compute heat flux that are not dependent on temperature:    
     q_earth_ir = heat_earth_IR(emittance_back=emittance_back, ff = ff, area = area)
