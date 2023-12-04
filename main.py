@@ -1,4 +1,4 @@
-from src.solarchallenge.trajectory.orbit import Orbit, coe2rv
+from src.solarchallenge.trajectory.orbit import Orbit, coe2rv, rv2coe
 from src.solarchallenge.bodies.bodies import Earth, Sun
 import numpy as np
 from datetime import datetime
@@ -75,12 +75,12 @@ earth_orbit = Orbit.from_coe(a=1.00000011*AU, ecc=0.0, inc = 0.0, raan = 0, argp
 #v = [7.37289205, 2.08223573, 0.43999979]
 #iss_orbit = Orbit.from_vector(r,v,J2000, Earth)
 
-iss_orbit = Orbit.from_coe(a = 6771, ecc = 0.0, inc=60, raan=0, argp=0, nu = 180, epoch=J2000, attractor=Earth)
+iss_orbit = Orbit.from_coe(a = 6771, ecc = 0.00 , inc=60, raan=15, argp=12, nu = 150, epoch=J2000, attractor=Earth)
 
 engine = Model()
 engine.set_orbit_body(earth_orbit)
 engine.set_orbit_solar_panel(iss_orbit)
-engine.propagate_orbit(start = J2000 + timedelta(0.0), end = J2000 + timedelta(0.2) + timedelta(0.2), perturbations_panel=[constant_accel_wrapper(-0E-5)])
+engine.propagate_orbit(start = J2000 + timedelta(0.0), end = J2000 + timedelta(0.2), perturbations_panel=[constant_accel_wrapper(-1E-6)])
 
 ###################
 # Solar Panel stuff
@@ -115,21 +115,14 @@ solar_add = {"area": 1,
 panel = SolarPanel.from_dict(solar_panel|solar_add)
 #panel.set_therm_parameters(**solar_add)
 
-engine.set_solar_panel(panel)
-engine.compute_power(thermal_model=True)
+#engine.set_solar_panel(panel)
+#engine.compute_power(thermal_model=True)
 
 TCELL = 20
 RADIANCE = 1300
 
 from solarchallenge.constants import S
+from solarchallenge.visualization.plotting import plot_coe, plot_IV
 
-
-#print(panel.compute_angle_solar_incidence(r_earth=[300000000,0,0], r_panel=[30.0,0,0]))
-#print(panel.compute_power(T = 28, angle_incidence=75, V = 2))
-
-#sol = compute_IV_PindadoCubas(G=RADIANCE, T=TCELL, solar_panel=m, method='constant', V = 2.6)
-
-# Sun distance
-# Temperature
-
-# (Initial Tcell, method, rtol, atol, params for albedo, etc...)
+#plot_coe(engine.r_panel, engine.v_panel, engine.time, engine.orbit_panel.attractor.mu)
+plot_IV(panel, np.array([200, 500, 800, 1367]), 28)

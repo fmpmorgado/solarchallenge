@@ -77,6 +77,10 @@ def compute_IV_PindadoCubas(solar_irr: float, temperature: float, solar_panel,
             current = i_sc * (1.0 - (1.0 - i_mp / i_sc) * (voltage / v_mp) ** (i_mp / (i_sc - i_mp)))
         else:
             current = i_mp * v_mp / voltage * (1 - ((voltage - v_mp) / (v_oc - v_mp)) ** phi)
+        
+        #Open circuit
+        if  current < 0:
+            current = 0
     except:
         current = np.zeros(v_mp.shape)
 
@@ -88,5 +92,8 @@ def compute_IV_PindadoCubas(solar_irr: float, temperature: float, solar_panel,
 
         index = (voltage - v_mp > 0)
         current[index] = i_mp[index] * v_mp[index] / voltage[index] * (1 - ((voltage[index] - v_mp[index]) / (v_oc[index] - v_mp[index])) ** phi[index])
+
+        #Open circuit
+        current[current < 0] = 0
 
     return current, voltage

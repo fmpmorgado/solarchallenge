@@ -30,6 +30,12 @@ MU_EARTH = 3.986E5
 #Mean Radius of Earth [km]
 R_MEAN_EARTH = 6_371
 
+#Earth J2 factor
+J2_EARTH = 0.00108263
+
+#Earth J3 factor
+J3_EARTH = -2.5326613168e-6
+
 #Mean albedo factor of Earth
 ALBEDO_EARTH = 0.3 
 
