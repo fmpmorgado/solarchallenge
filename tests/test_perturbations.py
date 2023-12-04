@@ -1,9 +1,8 @@
 import numpy as np
 from solarchallenge.trajectory.orbit import Orbit, rv2coe
-from solarchallenge.bodies.bodies import Earth, EARTH
-from solarchallenge.propagator.propagator import propagate_cowell
-from solarchallenge.propagator.perturbations import J2_perturbation_wrapper, J3_perturbation_wrapper
-from datetime import datetime, timedelta
+from solarchallenge.bodies.bodies import Earth
+from solarchallenge.trajectory.propagator import propagate_cowell
+from solarchallenge.trajectory.perturbations import J2_perturbation_wrapper, J3_perturbation_wrapper
 
 # Perturbation tests are based on the tests conducted with poliastro
 # https://github.com/poliastro/poliastro/blob/main/tests/tests_twobody/test_perturbations.py

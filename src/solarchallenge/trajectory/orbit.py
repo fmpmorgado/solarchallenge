@@ -1,4 +1,10 @@
+"""
+The trajectory.orbit module contains Orbit class to store orbit information
+and auxiliary functions to convert between position and velosity state and
+classical orbital elements
+"""
 import numpy as np
+import numpy.typing as npt
 import datetime
 from solarchallenge.bodies.bodies import Body
 
@@ -10,15 +16,15 @@ class Orbit:
     the frame J2000.
     """
 
-    def __init__(self, r: list[float], v: list[float], epoch: datetime.datetime, attractor: Body):
+    def __init__(self, r: npt.ArrayLike, v: npt.ArrayLike, epoch: datetime.datetime, attractor: Body):
         """Constructor of the class Obit.
 
         Parameters
         ----------
-        r : list[float]
+        r : np.array[float]
             Position vector [km]
-        v : list[float]
-            Velocity vector [km]
+        v : np.array[float]
+            Velocity vector [km/s]
         epoch : datetime.datetime
             Epoch of the orbit
         attractor : Body
@@ -31,25 +37,29 @@ class Orbit:
         self.attractor = attractor
         
     @classmethod
-    def from_vector(cls, r: list[float], v: list[float], epoch: datetime.datetime, attractor: Body):
+    def from_vector(cls, r: npt.ArrayLike, v: npt.ArrayLike, epoch: datetime.datetime, attractor: Body):
         """Return Orbit from position and velocity vectors.
 
         Parameters
         ----------
-        r : list[float]
+        r : np.array[float]
             Position vector [km]
-        v : list[float]
-            Velocity vector [km]
+        v : np.array[float]
+            Velocity vector [km/s]
         epoch : datetime.datetime
             Epoch of the orbit
         attractor : Body
             Object containing information of the attractor (ex: Sun, Earth)
         """
 
+        r = np.array(r)
+        v = np.array(v)
+
         return cls(r, v, epoch, attractor)
 
     @classmethod
-    def from_coe(cls, a: float, ecc: float, inc: float, raan: float, argp: float, nu: float, epoch: datetime.datetime, attractor: Body):
+    def from_coe(cls, a: float, ecc: float, inc: float, raan: float, argp: float,
+                 nu: float, epoch: datetime.datetime, attractor: Body):
         """Return Orbit from classical orbital elements.
 
         Parameters
@@ -82,8 +92,10 @@ class Orbit:
 
         return cls.from_vector(r, v, epoch, attractor)
 
+
 #https://orbital-mechanics.space/classical-orbital-elements/orbital-elements-and-the-state-vector.html
-def coe2rv(a: float, ecc: float, inc: float, raan: float, argp: float, nu: float, mu:float) -> tuple[list[float], list[float]]:
+def coe2rv(a: float, ecc: float, inc: float, raan: float, argp: float,
+           nu: float, mu: float) -> tuple[npt.ArrayLike, npt.ArrayLike]:
     """Convert classical orbital elements to cartesian
 
     Parameters
@@ -104,10 +116,10 @@ def coe2rv(a: float, ecc: float, inc: float, raan: float, argp: float, nu: float
         Standard Gravitational Parameter [km**3/s**2]
     
     Returns
-    r : list[float]
+    r : np.array[float]
         Position vector [km]
-    v : list[float]
-        Velocity vector [km]
+    v : np.array[float]
+        Velocity vector [km7s]
     """
 
     #Convert deg to rad units
@@ -132,18 +144,22 @@ def coe2rv(a: float, ecc: float, inc: float, raan: float, argp: float, nu: float
                               np.cos(raan) * (np.cos(argp + nu) + ecc * np.cos(argp)) * np.cos(inc)),
            np.sqrt(mu / p) * (np.cos(argp + nu) + ecc * np.cos(argp)) * np.sin(inc)]
 
+    r = np.array(r)
+    v = np.array(v)
+
     return r, v
 
+
 #https://control.asu.edu/Classes/MAE462/462Lecture07.pdf
-def rv2coe(r: list[float], v: list[float], mu: float) -> tuple[float, float, float, float, float, float]:
-    """Convert cartesian to classical orbital elments
+def rv2coe(r: npt.ArrayLike, v: npt.ArrayLike, mu: float) -> tuple[float, float, float, float, float, float]:
+    """Convert cartesian to classical orbital elements
 
     Parameters
     ----------
-    r : list[float]
+    r : np.array[float]
         Position vector [km]
-    v : list[float]
-        Velocity vector [km]
+    v : np.array[float]
+        Velocity vector [km/s]
     mu : float
         Standard Gravitational Parameter [km**3/s**2]
 
@@ -163,18 +179,18 @@ def rv2coe(r: list[float], v: list[float], mu: float) -> tuple[float, float, flo
         True anomaly [deg]
     """
 
-    # Convert to numpy array
+    # Force r, v to become np.array
     r = np.array(r)
     v = np.array(v)
     r_norm = np.linalg.norm(r) 
     v_norm = np.linalg.norm(v)
 
     # Computation of auxiliary variables
-    h = np.cross(r,v)
-    n = np.cross([0,0,1],h)
+    h = np.cross(r, v)
+    n = np.cross([0, 0, 1], h)
 
     # Eccentricity
-    ecc = 1.0 / mu * np.cross(v, h) - r/r_norm
+    ecc = 1.0 / mu * np.cross(v, h) - r / r_norm
     ecc_norm = np.linalg.norm(ecc) 
     
     # Eccentric anomaly
@@ -188,23 +204,23 @@ def rv2coe(r: list[float], v: list[float], mu: float) -> tuple[float, float, flo
 
     # Raan with quadrant correction
     raan = np.arccos(np.dot([1, 0, 0], n / np.linalg.norm(n)))
-    if np.dot([0,1,0], n) < 0:
-        raan = 2*np.pi - raan
+    if np.dot([0, 1, 0], n) < 0:
+        raan = 2 * np.pi - raan
 
     # Argument of the pericenter with quadrant correction
     argp = np.arccos(np.dot(n, ecc) / (np.linalg.norm(n) * ecc_norm))
-    if np.dot([0,0,1], n) < 0:
-        argp = 2*np.pi - argp
+    if np.dot([0, 0, 1], n) < 0:
+        argp = 2 * np.pi - argp
 
     # True anomaly with quadrant correction
     nu = np.arccos(np.dot(r, ecc)/(r_norm * ecc_norm))
     if np.dot(r, v) < 0:
-        nu = 2*np.pi - nu
+        nu = 2 * np.pi - nu
 
     # Convert from deg to rad
-    inc /= np.pi/180.0
-    raan /= np.pi/180.0
-    argp /= np.pi/180.0
-    nu /= np.pi/180.0
+    inc *= 180.0 / np.pi
+    raan *= 180.0 / np.pi
+    argp *= 180.0 / np.pi
+    nu *= 180.0 / np.pi
 
     return a, ecc_norm, inc, raan, argp, nu
