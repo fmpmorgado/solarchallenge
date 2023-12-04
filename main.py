@@ -115,14 +115,19 @@ solar_add = {"area": 1,
 panel = SolarPanel.from_dict(solar_panel|solar_add)
 #panel.set_therm_parameters(**solar_add)
 
-#engine.set_solar_panel(panel)
-#engine.compute_power(thermal_model=True)
+engine.set_solar_panel(panel)
+engine.compute_power(thermal_model=False)
 
 TCELL = 20
 RADIANCE = 1300
 
 from solarchallenge.constants import S
-from solarchallenge.visualization.plotting import plot_coe, plot_IV
+from solarchallenge.visualization.plotting import plot_coe, plot_IV, plot_power
+from solarchallenge.solarpanel.utils import compute_solar_radiance, compute_angle_solar_incidence
 
 #plot_coe(engine.r_panel, engine.v_panel, engine.time, engine.orbit_panel.attractor.mu)
-plot_IV(panel, np.array([200, 500, 800, 1367]), 28)
+#plot_IV(panel, np.array([200, 500, 800, 1367]), 28)
+
+solar_irr = compute_solar_radiance(engine.r_planet, engine.r_panel)
+theta = compute_angle_solar_incidence(engine.r_planet, engine.r_panel)
+plot_power(time=engine.time, power=engine.power, solar_irr=solar_irr, theta=theta)
